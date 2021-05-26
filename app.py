@@ -10,7 +10,7 @@ TMP_DIR = os.environ.get("TMP_DIR", ".")
 
 
 def get_color(img):
-    return img.getpixel(())
+    return img.getpixel((295, 60))
 
 
 
@@ -20,7 +20,7 @@ def app():
 
     with requests.Session() as session:
         res = session.get(url)
-        soup = BeautifulSoup(res.text)
+        soup = BeautifulSoup(res.text, features="lxml")
         img_url = None
         for img in soup.find_all("img"):
             if "trail status" in img.get("alt").lower():
@@ -28,17 +28,17 @@ def app():
                 img_url = urljoin(url, link)
                 break
         if img_url is not None:
-            res = session.get(img_url)
-            img_path = os.join(TMP_DIR, "_image.png")
+            res = session.get(img_url, stream=True)
+            img_path = os.path.join(TMP_DIR, "_image.png")
             with open(img_path, "wb") as fd:
-                fd.write(res.text)
+                for chunk in res:
+                    fd.write(chunk)
             img = Image.open(img_path)
             color = get_color(img)
-            if color == ():
-                # trails are closed
+            if color == (179, 29, 35, 255):
+                print("trails are closed!")
             else:
-                # trails are open
-
+                print("trails are open!")
             os.remove(img_path)
 
 
