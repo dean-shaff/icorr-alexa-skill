@@ -1,20 +1,27 @@
 from urllib.parse import urljoin
 import os
+import sys
 
-import requests
-from PIL import Image
-from bs4 import BeautifulSoup
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+bundle_dir = os.path.join(cur_dir, "bundle")
+
+tmp_dir = "."
+ENV = os.environ.get("ENV", "development")
+if ENV == "production":
+    sys.path.append(bundle_dir)
+    tmp_dir = "/tmp"
 
 
-TMP_DIR = os.environ.get("TMP_DIR", ".")
+import requests # noqa E402
+from PIL import Image # noqa E402
+from bs4 import BeautifulSoup # noqa E402
 
 
 def get_color(img):
     return img.getpixel((295, 60))
 
 
-
-def app():
+def handler():
 
     url = "http://www.icorrmtb.org/mobile/"
 
@@ -29,7 +36,7 @@ def app():
                 break
         if img_url is not None:
             res = session.get(img_url, stream=True)
-            img_path = os.path.join(TMP_DIR, "_image.png")
+            img_path = os.path.join(tmp_dir, "_image.png")
             with open(img_path, "wb") as fd:
                 for chunk in res:
                     fd.write(chunk)
@@ -41,12 +48,9 @@ def app():
                 print("trails are open!")
             os.remove(img_path)
 
-
         else:
             raise RuntimeError("Couldn't find image link!")
 
 
-
-
 if __name__ == "__main__":
-    app()
+    handler()
